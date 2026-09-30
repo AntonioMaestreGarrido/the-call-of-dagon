@@ -1,0 +1,30 @@
+.inspection-tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: min(760px, calc(100vw - 24px));
+  max-height: min(560px, calc(100dvh - 24px));
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid #789282;
+  border-radius: 6px;
+  background: #111a17;
+  color: #e2e7df;
+  box-shadow: 0 8px 32px #0009;
+  text-align: left;
+  scrollbar-width: thin;
+  letter-spacing: 0;
+}
+.inspection-tooltip::backdrop { background: transparent; pointer-events: none; }
+.card-tooltip { display: grid; grid-template-columns: 320px minmax(0,1fr); gap: 16px; align-items: start; }
+.card-tooltip > img { width: 100%; height: auto; border-radius: 4px; }
+.tooltip-copy { min-width: 0; overflow-wrap: anywhere; }
+.tooltip-copy h3 { font: 600 17px/1.3 Arial,sans-serif; margin: 0 0 8px; }
+.tooltip-copy h4 { font: 600 12px/1.4 Arial,sans-serif; color: #d5dcb7; margin: 12px 0 4px; }
+.tooltip-copy p { font: 12px/1.5 Arial,sans-serif; margin: 6px 0; color: #bdcabe; }
+.tooltip-copy .tooltip-subtitle { color: #d2d9ba; }
+.tooltip-copy .tooltip-warning { color: #e6ba85; }
+.tooltip-copy .tooltip-status { border-top: 1px solid #ffffff22; padding-top: 8px; color: #d4e4d6; }
+.tooltip-copy small { display: block; font: 10px/1.4 Arial,sans-serif; color: #91a496; margin-top: 12px; }
+.location-inspection { display: grid; grid-template-columns: 300px minmax(0,1fr); align-items: center; gap: 16px; }
+.location-inspection > img { width: 100%; aspect-ratio: 1; object-fit: contain; }

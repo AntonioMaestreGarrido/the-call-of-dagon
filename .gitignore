@@ -1,0 +1,8 @@
+node_modules/
+.npm-cache/
+dist/
+*.log
+reference/previews/
+reference/
+The Call of Dagon - EN/
+The Call of Dagon - EN.zip
