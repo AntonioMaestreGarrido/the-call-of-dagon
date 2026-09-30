@@ -1,17 +1,20 @@
 import React, {cloneElement, useEffect, useId, useLayoutEffect, useRef, useState} from 'react';
+import {X} from 'lucide-react';
 import {CARDS, COLOR_NAMES, EFFECT_TEXT, LOCATION, TRAIT_TEXT} from './data.js';
+import {DOUBLE_TAP_DELAY, isSecondTap, isTabletTouch} from './touch.js';
 import './tooltip.css';
 
 export const INSPECTION_DELAY = 450;
 
 export function Tooltip({children, content, enabled=true}) {
-  const id=useId(), anchor=useRef(null), panel=useRef(null), timer=useRef(null);
-  const [open,setOpen]=useState(false);
+  const id=useId(), anchor=useRef(null), panel=useRef(null), timer=useRef(null), clickTimer=useRef(null), lastPointer=useRef(null), lastTap=useRef(null), modeRef=useRef(null);
+  const [mode,setMode]=useState(null);
+  const open=mode!==null;
   const cancel=()=>clearTimeout(timer.current);
-  const close=()=>{cancel();setOpen(false);};
-  const schedule=()=>{cancel();if(enabled)timer.current=setTimeout(()=>setOpen(true),INSPECTION_DELAY);};
-  const leave=()=>{cancel();timer.current=setTimeout(()=>setOpen(false),120);};
-  useEffect(()=>()=>clearTimeout(timer.current),[]);
+  const close=()=>{cancel();modeRef.current=null;setMode(null);};
+  const schedule=()=>{cancel();if(enabled)timer.current=setTimeout(()=>{if(modeRef.current!=='touch'){modeRef.current='hover';setMode('hover');}},INSPECTION_DELAY);};
+  const leave=()=>{if(modeRef.current==='touch')return;cancel();timer.current=setTimeout(close,120);};
+  useEffect(()=>()=>{clearTimeout(timer.current);clearTimeout(clickTimer.current);},[]);
   useEffect(()=>{if(!enabled)close();},[enabled]);
   useLayoutEffect(()=>{
     if(!open)return;
@@ -30,16 +33,38 @@ export function Tooltip({children, content, enabled=true}) {
       if(e.type==='scroll'&&tooltip.contains(e.target))return;
       close();
     };
+    const dismissOutside=e=>{if(mode==='touch'&&!tooltip.contains(e.target)&&!anchor.current?.contains(e.target))close();};
     window.addEventListener('keydown',dismiss);
     window.addEventListener('resize',dismiss);
     window.addEventListener('scroll',dismiss,true);
-    return()=>{if(tooltip.matches(':popover-open'))tooltip.hidePopover();window.removeEventListener('keydown',dismiss);window.removeEventListener('resize',dismiss);window.removeEventListener('scroll',dismiss,true);};
-  },[open]);
+    document.addEventListener('pointerdown',dismissOutside);
+    return()=>{if(tooltip.matches(':popover-open'))tooltip.hidePopover();window.removeEventListener('keydown',dismiss);window.removeEventListener('resize',dismiss);window.removeEventListener('scroll',dismiss,true);document.removeEventListener('pointerdown',dismissOutside);};
+  },[open,mode]);
+  const click=e=>{
+    const pointer=lastPointer.current;
+    lastPointer.current=null;
+    if(enabled&&isTabletTouch(pointer,innerWidth)){
+      const now=performance.now(), previous=lastTap.current;
+      if(isSecondTap(previous,pointer,now)){
+        clearTimeout(clickTimer.current);
+        lastTap.current=null;
+        cancel();modeRef.current='touch';setMode('touch');
+        return;
+      }
+      lastTap.current={time:now,x:pointer.x,y:pointer.y};
+      clickTimer.current=setTimeout(()=>{lastTap.current=null;close();children.props.onClick?.(e);},DOUBLE_TAP_DELAY);
+      return;
+    }
+    close();
+    children.props.onClick?.(e);
+  };
   return <>{cloneElement(children,{
     ref:anchor,'aria-describedby':open?id:undefined,
-    onPointerEnter:schedule,onPointerLeave:leave,onFocus:schedule,onBlur:close,
-    onClick:e=>{close();children.props.onClick?.(e);},
-  })}{open&&<div ref={panel} id={id} role="tooltip" popover="manual" className="inspection-tooltip" onPointerEnter={cancel} onPointerLeave={leave}>{content}</div>}</>;
+    onPointerEnter:e=>{if(e.pointerType!=='touch')schedule();},onPointerLeave:e=>{if(e.pointerType!=='touch')leave();},
+    onPointerDown:e=>{lastPointer.current={type:e.pointerType,x:e.clientX,y:e.clientY};children.props.onPointerDown?.(e);},
+    onFocus:e=>{if(e.target.matches(':focus-visible'))schedule();},onBlur:()=>{if(modeRef.current!=='touch')close();},
+    onClick:click,
+  })}{open&&<div ref={panel} id={id} role={mode==='touch'?'dialog':'tooltip'} popover="manual" className={`inspection-tooltip${mode==='touch'?' touch-inspection':''}`} onPointerEnter={cancel} onPointerLeave={leave}>{mode==='touch'&&<button className="inspection-close" onClick={close} aria-label="Cerrar" title="Cerrar"><X size={18}/></button>}{content}</div>}</>;
 }
 
 export function CardDetails({id,game}) {

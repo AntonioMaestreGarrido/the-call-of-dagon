@@ -16,6 +16,9 @@
   letter-spacing: 0;
 }
 .inspection-tooltip::backdrop { background: transparent; pointer-events: none; }
+.touch-inspection { padding-top: 46px; }
+.inspection-close { position: absolute; top: 9px; right: 9px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 4px; color: #d8e1d6; background: #ffffff12; }
+.inspection-close:hover { background: #ffffff24; }
 .card-tooltip { display: grid; grid-template-columns: 320px minmax(0,1fr); gap: 16px; align-items: start; }
 .card-tooltip > img { width: 100%; height: auto; border-radius: 4px; }
 .tooltip-copy { min-width: 0; overflow-wrap: anywhere; }
